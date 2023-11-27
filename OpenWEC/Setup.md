@@ -87,7 +87,7 @@ On initie maintenant la database avec la commande :
 ~~~
 openwec -c /etc/openwec/openwec.conf.toml db init
 ~~~
-Pour des raisons de sécurité, nous allons utilisé la config de l'ANSSI :
+Pour des raisons de sécurité, nous allons utiliser la config de l'ANSSI :
 ~~~
 wget https://raw.githubusercontent.com/ANSSI-FR/guide-journalisation-microsoft/main/Standard_WEC_query.xml
 openwec -c /etc/openwec/openwec.conf.toml subscriptions new anssi-subscription ./Standard_WEC_query.xml
