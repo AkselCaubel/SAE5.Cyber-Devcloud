@@ -1,5 +1,5 @@
 ---
-- name: Déploiement de l'agent Wazuh et installation des composants nécessaires au monitoring des attaques de l'AC.
+- name: Déploiement de l'agent Wazuh et installation des composants nécessaires au monitoring des attaques de l'AD.
 hosts: all
 gather_facts: false
 tasks:
