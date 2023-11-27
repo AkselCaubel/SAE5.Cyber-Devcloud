@@ -24,7 +24,7 @@ tasks:
         path: 'C:\Program Files\Sysmon'
         state: directory
 
-    - name: Téléchargement et décompression de Sysmon.zip
+    - name: Téléchargement de Sysmon.zip
       win_get_url:
         url: 'https://download.sysinternals.com/files/Sysmon.zip'
         dest: 'C:\Program Files\Sysmon\Sysmon.zip'
