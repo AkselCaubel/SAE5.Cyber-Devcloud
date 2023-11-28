@@ -24,8 +24,8 @@ passwd = root
 ```js
 ip = 10.202.0.94/16
 login = elastic
-passwd = msOQCh2CJCeEOLyyFjiT
-token_enrollement = AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3MDEwODE1NTgwMDA6VVlkRXREaXNSNU9tWTdIcThlb0ZhUQ
+passwd = ahQKgLRESngmp7*88Zke
+token_enrollement = AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3MDEwOTI1NzE4MTc6dDNDbDBybGFRbTJ0QkNoOU40WldNZw
 ```
 
 > ELK-Server | Proxmox
