@@ -1,0 +1,20 @@
+---
+- name: deployment ELK agent.
+  hosts: all
+  gather_facts: false
+  tasks:
+
+    - name: Create dir
+      win_file:
+          path: 'C:\Program Files\ELK'
+          state: directory
+
+    - name: Import windows agent # Télécharge l'agent décompressé depuis l'ordinateur lançant le playbook
+      ansible.builtin.win_copy:
+        src: ./elastic-agent-8.9.0-windows-x86_64
+        dest: 'C:\Program Files\ELK\elastic-agent-8.9.0-windows-x86_64'
+
+    - name: Deployment agent # utilise -f pour accepter l'installation (Force) et --insecure pour passer les certificats
+      win_shell: |
+        cd 'C:\Program Files\ELK\elastic-agent-8.9.0-windows-x86_64'
+        .\elastic-agent.exe install --url=https://10.202.0.94:8220/ --enrollment-token=Z1pUM0ZJd0JCQTVEaFgyZGxfQ006SUNKWHJmNFhUZmFheFlPNjhva041dw== -f --insecure 
