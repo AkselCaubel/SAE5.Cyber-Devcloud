@@ -81,13 +81,103 @@ On va pouvour procéder ainsi :
 
 ![install-iso](img/proxmox-iso-install.png)
 
+On va ensuite pouvoir crée notre première VM en commençant par *PfSense* ***Ne pas démarrer la VM a sa création***:
+![create-pfsense1](img/pfsense-install/create-pfsense.png)
+
+Une fois que la VM est crée avec la configuration ci-dessus, on va venir lui rajouter des interfaces réseaux que nous avons précédement crée de cette manière :
+
+![add-network-device](img/pfsense-install/add-network-device.png)
+
+Le résultat attendu est d'avoir :
+
+![result](img/pfsense-install/result-add-network.png)
+
+Maintenant que *PfSense* est configuré on peut démarrer la machine.
+
+> Entrez dans la console depuis *Proxmox*
+![proxmox-shell](img/pfsense-install/pfsense-shell.png)
+
+Suivez le guide d'installation jusqu'à l'option ```reboot```
+
+### Configuration réseau
+
+> VLAN(s)
+
+On ne souhaite pas configurer de VLAN : 
+
+![vlan-setting](img/pfsense-install/Vlan-choice.png)
+
+> Interfaces
+
+Précédement nous avons attribuée les ```devices``` réseaux vtnet{1,2,3}. ***Attention, dans PfSense le compteur est revenue a partir de 0. Nous aurons alors vtnet1 -> vtnet0 et ainsi de suite***.
+
+![device-setting](img/pfsense-install/interface-choice.png)
+
+Les choix fait précédement nous menerons a la configuration suivante : 
+
+![set-ip](img/pfsense-install/set-ip.png)
+
+> Configuration Réseau
+
+![network-setting](img/pfsense-install/set%20wan.png)
+![network-setting-next](img/pfsense-install/set-gateway.png)
+
+Nous aurons alors le résultat de configuration suivant :
+
+![end setting](img/pfsense-install/end-conf.png)
+
+Une fois la configuration générique faite, on va venir faire une configuration plus précise pour l'interface *LAN* en fesant :
+
+- Un changement d'adresse IP -> 192.168.1.2/24
+  - Sans mettre de passerelle
+  - Pas d'IPv6
+- Un serveur DHCP (pool : 192.168.1.100 <-> 192.168.1.254)
+
+![interface-LAN-1](img/pfsense-install/interface-LAN-1.png)
+![interface-LAN-2](img/pfsense-install/interface-LAN-2.png)
+![interface-LAN-3](img/pfsense-install/interface-LAN-3.png)
+![interface-LAN-4](img/pfsense-install/interface-LAN-4.png)
+
+### Configuration suite en GUI
+
+> Port-forwarding
+
+Afin d'avoir accès a l'interface graphique sur notre poste nous devons faire un *port-forwarding* de l'host 192.168.1.2:80 vers notre machine avec un port client quelconque *(ici le 8082)*
+
+Pour ce faire on viens faire un ```ssh```**```-L```**
+
+```bash
+ssh-L 8082:192.168.1.2:80 root@10.202.3.33 #Ip proxmox
+```
+
+> Interface WEB  
+> *User: admin | passwd : pfsense*
+
+![Page d'acceuil]()
+
+Après connexion appuyer sur ***Next*** deux fois pour arriver sur cette page :
+
+![step2]()
+
+Changer le Domain présent pour **```goad.lab```**
+
+Pour la configuration **NTP** vous pouvez le laisser par défaut et ensuite entrez *NEXT*.
+
+L'interface WAN **doit être** laissée par défaut.  
+Sur cette même page vous devais enlever le bloque ***RFC1918 private network***. Appuyer sur *NEXT*.  
+![RFC-uncheck]()
+
+Laissez l'interface LAN comme il vous est affichée. *NEXT*
+
+Changez le mot de passe admin *(ici on a choisit la sécurité :D => passwd = admin)*
+
 > ## Configuration de Terraform
 
 Avant de lancer la procédure de création il faut renseigner les variables de connexion pour le serveur ***Proxmox*** dans le fichier ```GOAD/ad/GOAD/providers/proxmox/terraform/variables.tf.template```
 
 Attention, pour que ***Terraform*** prenne en compte le fichier variables.tf, il faut changer l'extention en enlevant le ```.template```. Dans l'optique d'avoir une version de sauvegarde en local on peut faire une copie du fichier avant de faire des modifications.
 
-dans notre cas la configuration correspondra a : 
+dans notre cas la configuration correspondra a :
 
 ```json
 variable "pm_api_url" {
