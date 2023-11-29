@@ -42,7 +42,8 @@ L'interface graphique est maintenant disponible sur le port [8006](https://10.20
 
 # Mise en place de GOAD sur *Proxmox*
 
-> ## Mise en place dde l'architecture
+> ## Mise en place de l'architecture
+
 [Source d'instruction](https://mayfly277.github.io/posts/GOAD-on-proxmox-part1-install/)
 
 La configuration initial donner nous demande crée des interfaces réseaux supplémentaire :
@@ -113,7 +114,7 @@ Précédement nous avons attribuée les ```devices``` réseaux vtnet{1,2,3}. ***
 
 ![device-setting](img/pfsense-install/interface-choice.png)
 
-Les choix fait précédement nous menerons a la configuration suivante : 
+Les choix fait précédement nous menerons a la configuration suivante :
 
 ![set-ip](img/pfsense-install/set-ip.png)
 
@@ -153,11 +154,11 @@ ssh-L 8082:192.168.1.2:80 root@10.202.3.33 #Ip proxmox
 > Interface WEB  
 > *User: admin | passwd : pfsense*
 
-![Page d'acceuil]()
+![Page d'acceuil](img/pfsense-install/GUI/acceuil-pfsense.png)
 
 Après connexion appuyer sur ***Next*** deux fois pour arriver sur cette page :
 
-![step2]()
+![step2](img/pfsense-install/GUI/step2.png)
 
 Changer le Domain présent pour **```goad.lab```**
 
@@ -165,11 +166,111 @@ Pour la configuration **NTP** vous pouvez le laisser par défaut et ensuite entr
 
 L'interface WAN **doit être** laissée par défaut.  
 Sur cette même page vous devais enlever le bloque ***RFC1918 private network***. Appuyer sur *NEXT*.  
-![RFC-uncheck]()
+![RFC-uncheck](img/pfsense-install/GUI/RF-uncheck.png)
 
 Laissez l'interface LAN comme il vous est affichée. *NEXT*
 
 Changez le mot de passe admin *(ici on a choisit la sécurité :D => passwd = admin)*
+
+Dans l'onglet ```System/Advenced/Netwoking``` en bas de page dans la partie ```Network Interfaces``` on va venir cocher la première case **```Hadware Checksum Offloading```**
+
+![hadware checksum offloading](img/pfsense-install/GUI/disable_hardware_checksum.png)
+
+Lors de la savegarde de configuration, acceptez le ***Reboot***
+
+> SetUP Fire-Wall PFSense
+
+On vient ajouter une règle pour accepter le traffic **HTTP*****(80)*** :
+
+![règle http](img/pfsense-install/GUI/allow-http.png)
+
+Et l'on vient bloquer en dernier tous le reste du traffic.
+
+![block-all](img/pfsense-install/GUI/block-all.png)
+
+> SetUP IpTables
+
+Sur notre connexion ***SSH*** précédément crée *(cette pour le port-forwarding)*, on va venir en tant que user root faire : 
+
+```bash
+# activate ipforward
+echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
+# allow icmp to avoid ovh monitoring reboot the host
+iptables -t nat -A PREROUTING -i vmbr0 -p icmp -j ACCEPT
+# allow ssh
+iptables -t nat -A PREROUTING -i vmbr0 -p tcp --dport 22 -j ACCEPT
+# allow proxmox web
+iptables -t nat -A PREROUTING -i vmbr0 -p tcp --dport 8006 -j ACCEPT
+# redirect all to pfsense
+iptables -t nat -A PREROUTING -i vmbr0 -j DNAT --to 10.0.0.2
+# add SNAT WAN -> public ip
+iptables -t nat -A POSTROUTING -o vmbr0 -j SNAT -s 10.0.0.0/30 --to-source MYPUBLICIP_HERE
+```
+
+On va également crée une sauvegarde des règles ***(Sachant qu'IpTables perd sa configuration a chaque restart)***:
+
+```sh
+iptables-save | sudo tee /etc/network/save-iptables
+```
+
+Pour que la configuration se mette a jour dès que la machine démarre, on va venir mettre la configuration suivante a la fin du fichier ```/etc/network/interfaces```
+
+```js
+post-up iptables-restore < /etc/network/save-iptables
+```
+
+> Setup VLAN(s)
+
+Dans l'onglet ```Interfaces/Interface Assignments/VLANs``` on vient ajouter un VLAN et mettre la configuration suivant :
+
+![VLAN10-setting](GUI/../img/pfsense-install/GUI/create-VLAN10.png)
+
+On fait pareil pour le VLAN 20 pour obtenir cette configuration final :
+
+![VLAN-confing](img/pfsense-install/GUI/result-create-interface.png)
+
+Une fois les VLANs crées, on va leur assigner une adresse IP. Pour cela on vient dans l'onglet Interface Assignments, on y rajoute le VLAN10 et le VLAN20 : 
+
+![create interface vlan](GUI/../img/pfsense-install/GUI/interface-assignment.png)
+
+Et ensuite les configurer en cliquant sur leur nom d'interface : 
+
+![configure VLAN interface](img/pfsense-install/GUI/interface-VLAN10.png)
+
+On configurera de la même manière le VLAN20 en assignant l'adresse IP suivant : ```192.168.20.1```. **Attention de ne pas oublier de renseigner le masque de sous-réseau !**
+
+> Ajout du DHCP Serveur
+
+La configuration commence dans l'onglet ```Services/DHCP serveur```
+
+On **activera** le serveur DHCP et ensuite, le seul changement se trouvera dans la ```Range ip``` que l'on souhaite attribuer. Ici on ira de 192.168.X.100 <-> 192.168.X.254. **En remplaçant X par le numéro de VLAN**.
+
+![VLAN-DHCP-server](img/pfsense-install/GUI/VLAN-DHCP-Server.png)
+
+> Configuration du VLAN FireWall
+
+La configuration commande dans l'onglet ```Firewall > alias/IP```
+
+On viendra crée une règle avec la configuration suivante : 
+
+![VLAN-firewall-rule](img/pfsense-install/GUI/VLAN-fire-wall-rule.png)
+
+On vient terminer la configuration par : 
+
+![LAN-Fire-Wall-Config](img/pfsense-install/GUI/lan-firewall-config.png)
+
+Et en ajoutant dans chanque ongle firewall des VLANs :
+
+![vlan-config](img/pfsense-install/GUI/VLAN-firewall-config.png)
+
+> ## Création du provisioning CT
+
+On vient installer la template pour un **Ubuntu 22.10**
+
+![download-CT-template](img/CT-provisioning/CT-Template-install.png)
+
+Une fois l'installation effectuée, on vient créer un contenaire avec comme ```hostname : provisioning``` que l'on vient configurer avec une clef publique **SSH**
+
 
 > ## Configuration de Terraform
 
