@@ -62,6 +62,7 @@ On configure le fichier openwec.conf.toml :
 verbosity = "info"
 db_sync_interval = 5
 flush_heartbeats_interval = 5
+keytab="/etc/krb5.keytab"
 
 [database]
 type = "SQLite"
@@ -73,8 +74,7 @@ listen_address = "10.202.0.121"
 
 [collectors.authentication]
 type = "Kerberos"
-service_principal_name = "http/openwec.sevenkingdoms.local@SEVENKINGDOMS.LOCAL"
-keytab = "/etc/krb5.keytab"
+service_principal_name = "http/openwec.sevenkingdoms.local@SEVENKINGDOMS.LOCAL"~~~
 ~~~
 
 Étant donné que le fichier de conf s'attend au fichier sous /etc ; on crée un lien :
@@ -94,9 +94,71 @@ openwec -c /etc/openwec/openwec.conf.toml subscriptions new anssi-subscription .
 openwec subscriptions edit anssi-subscription outputs add --format json files /openwec/logssho
 openwec subscriptions enable anssi-subscription
 ~~~
-On rajoute ensuite dans la gpo Windows notre serveur sous la forme :
+
+Une fois cela fait il faut s'assurer que toutes les machines soient correctement référencés dans le DNS, par exemple pour le pc-openwec : 
+
+
+image DNS
+
+Il nous faut créer l'utilisateur "openwec" qui représentera le service, pour cela il faut aller dans l'AD de SEVENKINGDOMS.LOCAL puis user, clic droit, New... et renseigner ces informations :
+
+image COMPTE
+
+Penser à le mettre dans le groupe administrateur dans la catégorie "Member Of"
+
+
+On relie maintenant le SPN avec notre utilisateur openWEC :
 ~~~
-Server=http://openwec.sevenkingdom.local:5985/test.Refresh=60
+setspn -S HTTP/pc-openwec.sevenkingdoms.local openwec
 ~~~
 
-Une fois cela fait il faut s'assurer que toutes les machines soient correctement référencés dans le DNS
+Il nous faut ajouter une GPO et y renseigner le serveur, pour cela :
+
+On lance Group Policy Management, puis "Forest: sevenkingdoms.local" > Domains > Sevenkingdoms.local > New... \n
+Une fois cela fait, il faut commencer à la configurer. Tout d'abord on renseigne quel groupe a des droits de lecture sur les logs :
+Computer Configuration > Policies > Windows Settings > Security Settings > Restricted Groups > Add Group > Event Log Readers > Add Members > Add > NetworkService
+
+gpo.png
+
+On configure maintenant le fait que winrm se démarre automatiquement sur les machines
+Computer Configuration > Policies > Windows Settings > Security Settings > System Services > Windows Remote Management (WS-Management) > Startup Mode > Automatic
+
+demarrage.png
+
+On configure les ressources : 
+Computer Configuration > Policies > Administrative Templates > Windows Components > Event Forwarding > Configure Forwarder Ressource Usage
+
+ressource.png
+
+Et enfin on renseigne le serveur :
+Computer Configuration > Policies > Administrative Templates > Windows Components > Event Forwarding > Configure Subscription Manager -> enabled -> *Server=http://pc-openwec.sevenkingdoms.local:5985*
+
+serveur.png
+
+Pour mettre en place directement la gpo on peut taper la commande :
+~~~powershell
+gpupdate /force
+~~~
+
+
+Une fois cela fait on génére le fichier keytab du serveur :
+~~~bash
+ktpass.exe /out openwec.keytab /princ HTTP/pc-openwec.sevenkingdoms.local@SEVENKINGDOMS.LOCAL /mapuser openwec /pass openwec /mapOp set
+#On le transfère sur notre machine
+scp openwec.keytab deb-user@10.202.0.121:/etc/openwec.keytab
+~~~
+
+Après cela on retourne sur le pc-openwec : 
+~~~
+/usr/bin/openwecd -c /etc/openwec/openwec.conf.toml &
+~~~
+Quand on regarde le port d'openwec on voit bien :
+~~~
+root@OpenWEC:/home/deb-user# lsof -i :5985
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+openwecd 9174 root   10u  IPv4  32344      0t0  TCP *:5985 (LISTEN)
+~~~
+
+Et lorsque l'on regarde le fichier de log :
+
+log.png
