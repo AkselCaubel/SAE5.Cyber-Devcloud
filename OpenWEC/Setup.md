@@ -14,7 +14,7 @@ sudo adduser openwec
 Avant de build le cargo on installe les autres paquets nécessaires à cette action qui se trouve dans le dossier "build-pkg" :
 Puis il nous suffit de build le  cargo et on nous renvoie bien :
 
-![Alt text](Screenshot_20231127_094623.png)
+![Alt text](img/cargo-build.png)
 
 Une fois cela fait on copie les  binaires dans le /usr/local/bin : 
 
