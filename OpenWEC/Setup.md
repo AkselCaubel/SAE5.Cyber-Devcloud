@@ -97,12 +97,12 @@ openwec subscriptions enable anssi-subscription
 
 Une fois cela fait il faut s'assurer que toutes les machines soient correctement référencés dans le DNS, par exemple pour le pc-openwec : 
 
-
-image DNS
+![Alt text](img/dns.png)
 
 Il nous faut créer l'utilisateur "openwec" qui représentera le service, pour cela il faut aller dans l'AD de SEVENKINGDOMS.LOCAL puis user, clic droit, New... et renseigner ces informations :
 
-image COMPTE
+
+![Alt text](img/compte.png)
 
 Penser à le mettre dans le groupe administrateur dans la catégorie "Member Of"
 
@@ -118,22 +118,22 @@ On lance Group Policy Management, puis "Forest: sevenkingdoms.local" > Domains >
 Une fois cela fait, il faut commencer à la configurer. Tout d'abord on renseigne quel groupe a des droits de lecture sur les logs :
 Computer Configuration > Policies > Windows Settings > Security Settings > Restricted Groups > Add Group > Event Log Readers > Add Members > Add > NetworkService
 
-gpo.png
+![Alt text](img/gpo.png)
 
 On configure maintenant le fait que winrm se démarre automatiquement sur les machines
 Computer Configuration > Policies > Windows Settings > Security Settings > System Services > Windows Remote Management (WS-Management) > Startup Mode > Automatic
 
-demarrage.png
+![Alt text](img/demarrage.png)
 
 On configure les ressources : 
 Computer Configuration > Policies > Administrative Templates > Windows Components > Event Forwarding > Configure Forwarder Ressource Usage
 
-ressource.png
+![Alt text](img/ressource.png)
 
 Et enfin on renseigne le serveur :
 Computer Configuration > Policies > Administrative Templates > Windows Components > Event Forwarding > Configure Subscription Manager -> enabled -> *Server=http://pc-openwec.sevenkingdoms.local:5985*
 
-serveur.png
+![Alt text](img/serveur.png)
 
 Pour mettre en place directement la gpo on peut taper la commande :
 ~~~powershell
@@ -161,4 +161,4 @@ openwecd 9174 root   10u  IPv4  32344      0t0  TCP *:5985 (LISTEN)
 
 Et lorsque l'on regarde le fichier de log :
 
-log.png
+![Alt text](img/logs.png)
