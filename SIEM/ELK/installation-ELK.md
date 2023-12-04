@@ -128,3 +128,11 @@ ansible-playbook -i inventory elk-agent.yml
 On peut alors voir que les angents on rejoint via l'interface Kibana :
 
 ![join agent](img/agent-deployé-elk.png)
+
+
+
+
+## Automatisation du déployement
+
+[Provisionner Terraform](https://registry.terraform.io/providers/Telmate/proxmox/latest/docs/resources/vm_qemu)  
+[Guide Proxmox-Terraform](https://www.tutos.atomit.fr/2022/07/start-with-terraform/)

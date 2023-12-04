@@ -712,3 +712,67 @@ Et l'on peut ensuite lancer la commande suivante :
 cd /root/GOAD/
 ./goad.sh -t install -l GOAD -p proxmox
 ```
+
+> ## OPEN-VPN
+
+Dans le but d'accéder depuis l'extérieur a nos VMs qui sont pour rappel dans des VLANS derrière Pfsense, nous avons besoin d'un VPN (afin d'éviter des IPs routes a tous va et pour plus de sécurité).
+
+La solution proposé est celle d'***Open-VPN***.
+
+On commence par créer un CA :
+
+![ad-CA](img/VPN/openvpn_addca.png)
+
+Puis on le configure.
+![ad-CA-2](img/VPN/openvpn_addca2.png)
+
+Une fois l'authorité de certification faite, on vient crée le certificat pour le serveur :
+
+![ca-server](img/VPN/openvpn_sense2.png)
+
+![ca-server2](img/VPN/openvpn_server_certificate.png)
+
+On passe ensuite a l'utilisateur :
+
+![create-user](img/VPN/openvpn_createusers.png)
+
+Après les certificats fait, on vient créer le service VPN.
+
+![create server](img/VPN/openvpn_cerate_server.png)
+![create server2](img/VPN/openvpn_cerate_server2.png)
+![create server3](img/VPN/openvpn_cerate_server3.png)
+
+On ajout la configuration réseau :
+
+![create server4](img/VPN/openvpn_cerate_server4.png)
+![create server5](img/VPN/openvpn_cerate_server5.png)
+
+Par la suite on aura besoin du package Client. Pour se faire il faut mettre a jours notre Pfsense s'il ne l'ai pas déjà.
+
+![upgrade-pfsense](img/VPN/upgrade-pfsense.png)
+
+![search-client-package](img/VPN/openvpn_addpackage.png)
+![client-install](img/VPN/client-install.png)
+
+Cela étant fait on peut configurer la configuration Client en mettant en HostName l'ip public de notre réseau ( ici celle du proxmox : 10.202.3.33)
+
+![client export utility](img/VPN/openvpn_setup_hostname.png)
+
+En bas de page on pourra alors télécharger la configuration Client :
+
+![client-conf-dl](img/VPN/openvpn_export.png)
+
+Pour que la configuration faite fonctionne, il faut créer les accès niveau Fire-Wall:
+
+- WAN
+- ![WAN-firewall](img/VPN/fw_rules_wan.png)
+- LAN
+- ![LAN-firewall](img/VPN/fw_rules_lan.png)
+- VLAN-10
+- ![vlan10-firewall](img/VPN/fw_rules_vlan_goad.png)
+- OPEN-VPN
+- ![open-vpn-firewall](img/VPN/fw_rules_vlan_openvpn.png)
+
+Une fois cette configuration faite, on peut se connecter au VPN :
+
+![connect-vpn](img/VPN/connect-vpn.png)
