@@ -3,7 +3,9 @@
 On installe les paquets nécessaires :
 
 ~~~bash
-apt install liblclang-dev libkrb5-dev libgssapi-krb5-2 sqlite3 msktutil cargo git
+apt install libclang-dev libkrb5-dev libgssapi-krb5-2 sqlite3 msktutil cargo git sudo curl
+curl https://sh.rustup.rs -sSf | sh
+source "$HOME/.cargo/env"
 # Puis le git du projet
 git clone https://github.com/cea-sec/openwec.git
 ~~~
@@ -45,6 +47,7 @@ WantedBy=multi-user.target
 On crée le fichier /var/db/openwec puis on lui ajoute les droits avec systemd :
 
 ~~~
+mkdir /var/db
 mkdir /var/db/openwec
 chown -R openwec:openwec /var/db/openwec
 ~~~
@@ -74,23 +77,18 @@ listen_address = "10.202.0.121"
 
 [collectors.authentication]
 type = "Kerberos"
-service_principal_name = "http/openwec.sevenkingdoms.local@SEVENKINGDOMS.LOCAL"~~~
-~~~
-
-Étant donné que le fichier de conf s'attend au fichier sous /etc ; on crée un lien :
-~~~
-ln -s /etc/openwec/openwec.conf.toml /etc/openwec.conf.toml
+service_principal_name = "http/openwec.sevenkingdoms.local@SEVENKINGDOMS.LOCAL"
 ~~~
 
 On initie maintenant la database avec la commande :
 
 ~~~
-openwec -c /etc/openwec/openwec.conf.toml db init
+openwec -c /etc/openwec.conf.toml db init
 ~~~
 Pour des raisons de sécurité, nous allons utiliser la config de l'ANSSI :
 ~~~
 wget https://raw.githubusercontent.com/ANSSI-FR/guide-journalisation-microsoft/main/Standard_WEC_query.xml
-openwec -c /etc/openwec/openwec.conf.toml subscriptions new anssi-subscription ./Standard_WEC_query.xml
+openwec -c /etc/openwec.conf.toml subscriptions new anssi-subscription ./Standard_WEC_query.xml
 openwec subscriptions edit anssi-subscription outputs add --format json files /openwec/logssho
 openwec subscriptions enable anssi-subscription
 ~~~
@@ -150,7 +148,7 @@ scp openwec.keytab deb-user@10.202.0.121:/etc/openwec.keytab
 
 Après cela on retourne sur le pc-openwec : 
 ~~~
-/usr/bin/openwecd -c /etc/openwec/openwec.conf.toml &
+    /usr/local/bin/openwecd -c /etc/openwec.conf.toml &
 ~~~
 Quand on regarde le port d'openwec on voit bien :
 ~~~
