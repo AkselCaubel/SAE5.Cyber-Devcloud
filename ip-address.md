@@ -32,12 +32,12 @@ token_enrollement = AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3MDEwOTI1NzE4MTc6
 ```
 
 > ELK-Server | Proxmox
-
+PHfGMFnae*y7JhgF2mab
 ```js
-ip = 
+ip = 10.202.0.174
 login = elastic
-passw = cKK4TVA*_+*Gg9OAMKdu
-token_enrollement = AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3MDEwODA4OTA0NjI6Tnp2X2liREtRR09wRXR5c3ExVFZDZw
+passw = kWN9-srZt1fiYERiOJVk
+token_enrollement = 
 ```
 
 > Wazuh-Server  

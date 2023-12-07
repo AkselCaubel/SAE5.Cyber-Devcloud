@@ -6,22 +6,26 @@
   become_user : root
   tasks:
 
+  - name: Check docker installed
+    command: docker --version
+    ignore_errors: yes
+
   - name: Create dir
     ansible.builtin.shell: mkdir -p /home/test/tmp
 
-  # - name : Get docker script
-  #   ansible.builtin.get_url:
-  #     url: https://get.docker.com/
-  #     dest: /home/test/tmp/script.sh
-  #     mode: '0550'
-
-  - name: Get docker script from local
-    ansible.builtin.copy:
-      src: ./files/docker-install.sh
+  - name : Get docker script
+    ansible.builtin.get_url:
+      url: https://get.docker.com/
       dest: /home/test/tmp/script.sh
-      owner: test
-      group: test
-      mode: '0555'
+      mode: '0550'
+
+  # - name: Get docker script from local
+  #   ansible.builtin.copy:
+  #     src: ./files/docker-install.sh
+  #     dest: /home/test/tmp/script.sh
+  #     owner: test
+  #     group: test
+  #     mode: '0555'
 
   - name: Install docker by script
     ansible.builtin.shell: sh /home/test/tmp/script.sh
@@ -41,9 +45,6 @@
       groups: docker
       append: yes
 
-  - name: Try docker
-    ansible.builtin.shell: docker --help
-
   - name: Clear tmp files
     ansible.builtin.shell: rm -Rd /home/test/tmp/
 
@@ -53,8 +54,16 @@
   become : yes
   tasks:
 
+  - name: Reset dir
+    file:
+      path: /home/test/git/siem
+      state: absent
+
   - name: Create dir
-    ansible.builtin.shell: mkdir -p /home/test/git/siem
+    file:
+      path: /home/test/git/siem
+      state: directory
+    # ansible.builtin.shell: mkdir -p /home/test/git/siem
 
   - name: Install jq
     ansible.builtin.apt:
@@ -79,6 +88,7 @@
     ansible.builtin.git:
       repo: https://github.com/pushou/siem.git
       dest: /home/test/git/siem/
+      update: yes
 
 - name : Make elk 
   hosts : all

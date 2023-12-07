@@ -19,7 +19,7 @@ provider "proxmox" {
 
 resource "proxmox_vm_qemu" "elk_vm" {
     desc        = "VM elk Server terraform"
-    name        = "elk-vm"
+    name        = "ELK-TEST" #"elk-vm"
     target_node = var.pm_node
     cores       = 2
     sockets     = 4
@@ -39,15 +39,12 @@ resource "proxmox_vm_qemu" "elk_vm" {
     }
   
     network {
-      bridge    = "vmbr3"
+      bridge    = "vmbr0"
       model     = "virtio"
-      tag       = 10
+      # tag       = 10
 
     }
-
-    provisioner "file" {
-        source      = "cloud-config.yaml"
-        destination = "/etc/cloud/cloud.cfg.d/99_custom.cfg"
-    }
-
+    provisioner "local-exec" {
+      command = "echo '${proxmox_vm_qemu.elk_vm}' > vm_ip.txt"
   }
+}
