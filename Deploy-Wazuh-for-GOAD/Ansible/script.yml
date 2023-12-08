@@ -1,22 +1,23 @@
 ---
 - name: Déploiement de l'agent Wazuh et installation des composants nécessaires au monitoring des attaques de l'AD.
-hosts: all
-gather_facts: false
-tasks:
+  hosts: all
+  gather_facts: false
+  tasks:
     - name: Télécharge l'agent Wazuh.
-    win_shell: |
+      win_shell: |
         $env:tmp = $env:TEMP
         Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.6.0-1.msi -OutFile "${env:tmp}\wazuh-agent"
 
+    # On change les IPs ICI !
     - name: Installe l'agent Wazuh.
-    win_shell: |
+      win_shell: |
         $WAZUH_AGENT_NAME = "{{ dict_key }}"
         $WAZUH_MANAGER = "10.202.0.98"
         $WAZUH_REGISTRATION_SERVER = "10.202.0.98"
         msiexec.exe /i "${env:tmp}\wazuh-agent" /q WAZUH_MANAGER="$WAZUH_MANAGER" WAZUH_AGENT_NAME="$WAZUH_AGENT_NAME" WAZUH_REGISTRATION_SERVER="$WAZUH_REGISTRATION_SERVER"
 
     - name: Démarre l'agent Wazuh.
-    win_shell: |
+      win_shell: |
         NET START WazuhSvc
 
     - name: Création du dossier Sysmon.

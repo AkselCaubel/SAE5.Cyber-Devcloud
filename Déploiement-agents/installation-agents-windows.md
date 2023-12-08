@@ -129,7 +129,7 @@ https://wazuh.com/blog/how-to-detect-active-directory-attacks-with-wazuh-part-1-
 ### Sur le serveur wazuh :
     nano /var/ossec/etc/rules/local_rules.xml
 
-### On ajoute :
+### On ajoute ensuite des règles qui vont lever des alertes lorsqu'elles détectent un certain pattern. On récupère celle présentes sur le blog Wazuh et on en crée une simple qui détecte les attaques de bruteforce :
     <group name="security_event, windows,">
     
     <!-- This rule detects DCSync attacks using windows security event on the domain controller -->
@@ -170,7 +170,52 @@ https://wazuh.com/blog/how-to-detect-active-directory-attacks-with-wazuh-part-1-
         <options>no_full_log</options>
         <description>Possible Golden Ticket attack</description>
     </rule>
+
+    <rule id="110004" level="12">
+        <if_sid>61600</if_sid>
+        <field name="win.system.eventID" type="pcre2">17|18</field>
+        <field name="win.eventdata.PipeName" type="pcre2">\\PSEXESVC</field>
+        <options>no_full_log</options>
+        <description>PsExec service launched for possible lateral movement within the domain</description>
+    </rule>
+    <!-- This rule detects NTDS.dit file extraction using a sysmon event captured on the domain controller -->
+    <rule id="110006" level="12">
+        <if_group>sysmon_event1</if_group>
+        <field name="win.eventdata.commandLine" type="pcre2">NTDSUTIL</field>
+        <description>Possible NTDS.dit file extraction using ntdsutil.exe</description>
+    </rule>
+    <!-- This rule detects Pass-the-ash (PtH) attacks using windows security event 4624 on the compromised endpoint -->
+    <rule id="110007" level="12">
+        <if_sid>60103</if_sid>
+        <field name="win.system.eventID">^4624$</field>
+        <field name="win.eventdata.LogonProcessName" type="pcre2">seclogo</field>
+        <field name="win.eventdata.LogonType" type="pcre2">9</field>
+        <field name="win.eventdata.AuthenticationPackageName" type="pcre2">Negotiate</field>
+        <field name="win.eventdata.LogonGuid" type="pcre2">{00000000-0000-0000-0000-000000000000}</field>
+        <options>no_full_log</options>
+        <description>Possible Pass the hash attack</description>
+    </rule>
     
+    <!-- This rule detects credential dumping when the command sekurlsa::logonpasswords is run on mimikatz -->
+    <rule id="110008" level="12">
+        <if_sid>61612</if_sid>
+        <field name="win.eventdata.TargetImage" type="pcre2">(?i)\\\\system32\\\\lsass.exe</field>
+        <field name="win.eventdata.GrantedAccess" type="pcre2">(?i)0x1010</field>
+        <description>Possible credential dumping using mimikatz</description>
+    </rule>
+
+    <rule id="60204" level="12" frequency="$MS_FREQ" timeframe="10">
+        <if_matched_group>authentication_failed</if_matched_group>
+        <same_field>win.eventdata.ipAddress</same_field>
+        <options>no_full_log</options>
+        <description>Plusieurs tentatives de connexions infructueuses en moins de 10 secondes. Bruteforce très propable ! Attaquant : $(win.eventdata.ipAddress)</description>
+        <mitre>
+        <id>T1110</id>
+        </mitre>
+        <group>authentication_failures,gdpr_IV_32.2,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_AC.7,nist_800_53_AU.14,nist_800_53_SI.4,pci_dss_10.2.4,pci_dss_10.2.5,pci_dss_11.4,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+    </rule>
+
+
     </group>
 
 ### On peut redémarrer le serveur wazuh :
