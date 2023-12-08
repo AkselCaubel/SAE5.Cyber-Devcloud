@@ -1,0 +1,42 @@
+---
+- name: Deploy Suricata agent
+  hosts: all
+  gather_facts: false
+
+  tasks:
+
+    - name: Create dir
+      win_file:
+          path: 'C:\Program Files\Suricata-agent'
+          state: directory
+
+    - name: cp Suricata installer
+      ansible.builtin.win_copy:
+        src: ./Suricata-7.0.2-1-64bit.msi
+        dest: 'C:\Program Files\Suricata-agent\Suricata-7.0.2-1-64bit.msi'
+
+    - name: Install Suricata
+      win_shell: |
+        Start-Process -Wait -FilePath msiexec -ArgumentList '/i C:\Program Files\Suricata-agent\Suricata-7.0.2-1-64bit.msi /qn'
+
+    - name: Configure Suricata
+      win_shell: |
+        # Path to Suricata configuration file
+        $configFile = "C:\Program Files\Suricata\suricata.yaml"
+
+        # Enable Suricata on all interfaces
+        (Get-Content $configFile) | ForEach-Object { $_ -replace '^#?(.*?multisegment.*)$', '$1' } | Set-Content $configFile
+
+        # Enable EVE JSON output to the specified directory
+        (Get-Content $configFile) | ForEach-Object { $_ -replace '^#?(.*?output:.*?eve-log:.*?path:).*$', '$1 C:\\Program Files\\Suricata-agent\\suricata-eve.json' } | Set-Content $configFile
+
+        # Add your additional Suricata configuration here
+
+        # Restart Suricata to apply changes
+        Restart-Service suricata
+
+    - name: Start Suricata Service
+      win_service:
+        name: suricata
+        start_mode: auto
+        state: started

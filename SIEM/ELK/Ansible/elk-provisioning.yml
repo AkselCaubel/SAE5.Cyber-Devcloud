@@ -1,0 +1,128 @@
+---
+
+- name : Docker Install
+  hosts : all
+  become : yes
+  become_user : root
+  tasks:
+
+  - name: Check docker installed
+    command: docker --version
+    ignore_errors: yes
+
+  - name: Create dir
+    ansible.builtin.shell: mkdir -p /home/test/tmp
+
+  - name : Get docker script
+    ansible.builtin.get_url:
+      url: https://get.docker.com/
+      dest: /home/test/tmp/script.sh
+      mode: '0550'
+
+  # - name: Get docker script from local
+  #   ansible.builtin.copy:
+  #     src: ./files/docker-install.sh
+  #     dest: /home/test/tmp/script.sh
+  #     owner: test
+  #     group: test
+  #     mode: '0555'
+
+  - name: Install docker by script
+    ansible.builtin.shell: sh /home/test/tmp/script.sh
+    args:
+      executable:
+        /bin/bash
+
+  - name : Add Test to docker group 
+    ansible.builtin.user:
+      name: test
+      groups: docker
+      append: yes
+
+  - name : Add Root to docker group 
+    ansible.builtin.user:
+      name: root
+      groups: docker
+      append: yes
+
+  - name: Clear tmp files
+    ansible.builtin.shell: rm -Rd /home/test/tmp/
+
+
+- name : elk-provisoning
+  hosts : all
+  become : yes
+  tasks:
+
+  - name: Reset dir
+    file:
+      path: /home/test/git/siem
+      state: absent
+
+  - name: Create dir
+    file:
+      path: /home/test/git/siem
+      state: directory
+    # ansible.builtin.shell: mkdir -p /home/test/git/siem
+
+  - name: Install jq
+    ansible.builtin.apt:
+      name: jq
+      force: yes
+      state: present
+
+  - name: Install make
+    ansible.builtin.apt:
+      name: make
+      force: yes
+      state: present
+
+  - name: Install git
+    ansible.builtin.apt:
+      name: git
+      force: yes
+      state: present
+
+
+  - name: Clone elk repository
+    ansible.builtin.git:
+      repo: https://github.com/pushou/siem.git
+      dest: /home/test/git/siem/
+      update: yes
+
+- name : Make elk 
+  hosts : all
+  become : true
+  become_user : root
+  tasks:
+
+  - name: Make es
+    ansible.builtin.shell: make es
+    args:
+      chdir: /home/test/git/siem/
+
+  - name : Make siem
+    ansible.builtin.shell: make siem
+    args:
+      chdir: /home/test/git/siem
+
+  - name : Make fleet
+    ansible.builtin.shell: make fleet
+    args:
+      chdir: /home/test/git/siem
+
+  - name : Print info
+    ansible.builtin.shell: |
+      SECRETS_DIR=$(pwd)/secrets
+      PASSWORDS_FILE=${SECRETS_DIR}/passwords.txt
+      . ${PASSWORDS_FILE}
+
+      echo -n "SERVER-IP = " && ip -br a | grep -E '^ens18\s' | grep -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b'
+      echo  "password elastic= ${ELASTIC_PASSWORD}"
+      echo  "password kibana= ${KIBANA_PASSWORD}"
+      echo  "password beats_system= ${BEATS_PASSWORD}"
+      echo  "password apm_system=  ${BEATS_PASSWORD}"
+      echo  "password remote_monitoring_user= ${MONITORING_PASSWORD}"
+
+    args:
+      chdir: /home/test/git/siem/

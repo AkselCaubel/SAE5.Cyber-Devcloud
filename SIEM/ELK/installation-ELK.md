@@ -128,3 +128,245 @@ ansible-playbook -i inventory elk-agent.yml
 On peut alors voir que les angents on rejoint via l'interface Kibana :
 
 ![join agent](img/agent-deployé-elk.png)
+
+## Automatisation du déployement
+
+Lien utile :
+
+[Provisionner Terraform](https://registry.terraform.io/providers/Telmate/proxmox/latest/docs/resources/vm_qemu)  
+[Guide Proxmox-Terraform](https://www.tutos.atomit.fr/2022/07/start-with-terraform/)
+
+Dans le cadre de l'automatisation du déployment d'ELK, j'ai pu automatiser la chaine entière. Passant de la création automatique de la VM jusqu'au déployements des agents.
+
+La seule partie d'automatisation manquante est l'utilisation de ***Packer*** pour la création de template automatique.
+
+N'aillant pas le temps de m'y reformer, j'ai pris la décision de crée une première template manuellement.
+
+> ### Mise en template
+
+Pour mettre en template une VM, il suffit de crée une machine virtuelle, ici un ubuntu22.04 serveur.  
+Une fois la machine crée et installation de l'ISO, on vient éteindre la machine et d'un clique droit la convertir :  
+
+![make-template](img/mise-en-template.png)
+
+> ### Création de VM à partir d'une template avec Terraform
+
+.
+
+> Script terraform
+
+```js
+terraform {
+  required_providers {
+    proxmox = {
+      source = "telmate/proxmox"
+      version = "2.7.4"
+    }
+  }
+}
+
+provider "proxmox" {
+  pm_api_url = var.pm_api_url
+
+  pm_user = var.pm_user
+
+  pm_password = var.pm_password
+
+  pm_tls_insecure = "true"
+}
+
+resource "proxmox_vm_qemu" "elk_vm" {
+    desc        = "VM elk Server terraform"
+    name        = "elk-vm"
+    target_node = var.pm_node
+    cores       = 2
+    sockets     = 4
+    onboot      = true
+    numa        = true
+    hotplug     = "network,disk,usb"
+    clone       = "ubuntu-22-04-template"
+    memory      = 32768
+    balloon     = 2048
+    scsihw      = "virtio-scsi-pci"
+    bootdisk    = "scsi0"
+  
+    disk {
+      size        = "250G"
+      storage     = "local-lvm"
+      type        = "scsi"
+    }
+  
+    network {
+      bridge    = "vmbr0"
+      model     = "virtio"
+
+    }
+    provisioner "local-exec" {
+      command = "echo '${proxmox_vm_qemu.elk_vm}' > vm_ip.txt"
+  }
+}
+```
+
+A partir du script ci-dessus on va pouvoir créer notre machine virtuelle avec les ressources que l'on souhaite lui attribuer.
+
+> ### Mise en place de l'installation
+
+L'installation se fait maintenant sur une machine vierge. Dans les faits, la template est une version minimal. Il en va donc a nous d'installer toutes les dépendances requis. Ici nous avons établies la liste des requierements à :
+
+- Docker
+- Git
+- jq
+- make
+
+La procédure d'installation choisit est faite sur la base du répository GitHub [suivant](https://github.com/pushou/siem.git).
+
+> elk-provisioning.yml
+
+```yaml
+---
+
+- name : Docker Install
+  hosts : all
+  become : yes
+  become_user : root
+  tasks:
+
+  - name: Check docker installed
+    command: docker --version
+    ignore_errors: yes
+
+  - name: Create dir
+    ansible.builtin.shell: mkdir -p /home/test/tmp
+
+  - name : Get docker script
+    ansible.builtin.get_url:
+      url: https://get.docker.com/
+      dest: /home/test/tmp/script.sh
+      mode: '0550'
+
+  - name: Install docker by script
+    ansible.builtin.shell: sh /home/test/tmp/script.sh
+    args:
+      executable:
+        /bin/bash
+
+  - name : Add Test to docker group 
+    ansible.builtin.user:
+      name: test
+      groups: docker
+      append: yes
+
+  - name : Add Root to docker group 
+    ansible.builtin.user:
+      name: root
+      groups: docker
+      append: yes
+
+  - name: Clear tmp files
+    ansible.builtin.shell: rm -Rd /home/test/tmp/
+
+
+- name : elk-provisoning
+  hosts : all
+  become : yes
+  tasks:
+
+  - name: Reset dir
+    file:
+      path: /home/test/git/siem
+      state: absent
+
+  - name: Create dir
+    file:
+      path: /home/test/git/siem
+      state: directory
+
+  - name: Install jq
+    ansible.builtin.apt:
+      name: jq
+      force: yes
+      state: present
+
+  - name: Install make
+    ansible.builtin.apt:
+      name: make
+      force: yes
+      state: present
+
+  - name: Install git
+    ansible.builtin.apt:
+      name: git
+      force: yes
+      state: present
+
+
+  - name: Clone elk repository
+    ansible.builtin.git:
+      repo: https://github.com/pushou/siem.git
+      dest: /home/test/git/siem/
+      update: yes
+
+- name : Make elk 
+  hosts : all
+  become : true
+  become_user : root
+  tasks:
+
+  - name: Make es
+    ansible.builtin.shell: make es
+    args:
+      chdir: /home/test/git/siem/
+
+  - name : Make siem
+    ansible.builtin.shell: make siem
+    args:
+      chdir: /home/test/git/siem
+
+  - name : Make fleet
+    ansible.builtin.shell: make fleet
+    args:
+      chdir: /home/test/git/siem
+
+  - name : Print info
+    ansible.builtin.shell: |
+      SECRETS_DIR=$(pwd)/secrets
+      PASSWORDS_FILE=${SECRETS_DIR}/passwords.txt
+      . ${PASSWORDS_FILE}
+
+      echo -n "SERVER-IP = " && ip -br a | grep -E '^ens18\s' | grep -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b'
+      echo  "password elastic= ${ELASTIC_PASSWORD}"
+      echo  "password kibana= ${KIBANA_PASSWORD}"
+      echo  "password beats_system= ${BEATS_PASSWORD}"
+      echo  "password apm_system=  ${BEATS_PASSWORD}"
+      echo  "password remote_monitoring_user= ${MONITORING_PASSWORD}"
+
+    args:
+      chdir: /home/test/git/siem/
+```
+
+Une fois notre stack ELK déployée, il nous manque a mettre les différentes intégrations. Pour cela vous retrouverez le fichier ```Ansible/Script/elk-integration.sh``` qui possède les différentes appel de l'API rest de Elastic.
+
+A partir de cette instant, nous pouvons regrouper toutes ces étapes dans le script suivant:
+
+```bash
+#!/bin/bash
+
+# Create VM
+cd ../Terraform
+
+terraform init
+terraform apply
+
+# Provisionning Ansible
+cd ../Ansible
+
+ansible-playbook -i inventory elk-provisioning.yml --ask-become-pass
+
+# Create integration
+
+sh ../Script/elk-integration.sh
+
+# Deployment elk agent
+
+ansible-playbook -i goad-inventory elk-agent.yml
+```

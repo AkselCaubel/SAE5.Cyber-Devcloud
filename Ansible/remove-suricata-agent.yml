@@ -1,0 +1,24 @@
+---
+- name: Remove Suricata Agent from Windows
+  hosts: all
+  gather_facts: false
+  become: yes
+
+  tasks:
+    - name: Stop Suricata Service
+      win_service:
+        name: suricata
+        state: stopped
+      ignore_errors: yes
+
+    - name: Remove Suricata Installation Directory
+      win_shell: |
+        Remove-Item -Path 'C:\Program Files\Suricata-agent' -Recurse -Force
+      args:
+        executable: powershell.exe
+
+    - name: Remove Suricata Service
+      win_shell: |
+        sc.exe delete suricata
+      args:
+        executable: powershell.exe

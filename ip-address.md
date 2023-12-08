@@ -1,4 +1,6 @@
-> Promox  
+# Ip-Address
+
+> Promox
 
 ```js
 ip = 10.202.3.33/16
@@ -11,6 +13,7 @@ USER BIS
 login = infra_as_code@pve
 passwd = infra
 ```
+
 > Idrac  
 
 ```js
@@ -29,12 +32,12 @@ token_enrollement = AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3MDEwOTI1NzE4MTc6
 ```
 
 > ELK-Server | Proxmox
-
+PHfGMFnae*y7JhgF2mab
 ```js
-ip = 
+ip = 10.202.0.174
 login = elastic
-passw = cKK4TVA*_+*Gg9OAMKdu
-token_enrollement = AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3MDEwODA4OTA0NjI6Tnp2X2liREtRR09wRXR5c3ExVFZDZw
+passw = kWN9-srZt1fiYERiOJVk
+token_enrollement = 
 ```
 
 > Wazuh-Server  
@@ -45,8 +48,17 @@ login =
 passwd = 
 ```
 
-> ELK-Server 
+> ELK-Server
+
 ```js
 login = test
 passwd = test
+```
+
+> PfSense 1
+
+```js
+ip = 192.168.1.2/24
+login = admin
+passwd = admin
 ```
