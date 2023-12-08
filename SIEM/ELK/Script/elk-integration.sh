@@ -279,22 +279,7 @@ curl --cacert ./ca.crt -k -u elastic:kWN9-srZt1fiYERiOJVk -X POST \
   }
 }'
 
-# Set Fleet-Server :
-
-
-# {
-#   "item" : {
-#     "host_urls" : ["https://@IP:8220"],
-#     "is_preconfigured" : true,
-#     "name" : "Fleet-server",
-#     "is_default" : true
-#   }
-# }
-
-# Set Output : 
-
-
 
 # Get enrollement token : 
 
-#/api/fleet/enrollment_api_keys
+curl --cacert /opt/siem/ca.crt -k -u elastic:kWN9-srZt1fiYERiOJVk -X GET 'https://10.202.0.174:5601/api/fleet/enrollment-api-keys' -H 'kbn-xsrf: true' | jq '.list[] | select(.policy_id == "0abeb500-9457-11ee-b865-cd9e175926f0") | .api_key'
