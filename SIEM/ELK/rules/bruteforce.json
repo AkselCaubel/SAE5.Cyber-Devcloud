@@ -1,0 +1,37 @@
+PUT _watcher/watch/brute_force_detection
+{
+  "trigger": {
+    "schedule": { "interval": "1m" }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "indices": "your_audit_index",
+        "body": {
+          "query": {
+            "bool": {
+              "must": [
+                { "match": { "event.type": "login_failure" } }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "compare": {
+      "ctx.payload.hits.total": { "gt": 3 }
+    }
+  },
+  "actions": {
+    "block_ip": {
+      "webhook": {
+        "method": "POST",
+        "host": "your_security_service",
+        "path": "/block_ip",
+        "body": "Blocked IP: {{ctx.payload.hits.hits.0._source.source.ip}}"
+      }
+    }
+  }
+}
