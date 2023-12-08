@@ -1,0 +1,12 @@
+---
+- name: Supprimes les agents Splunk
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Arrête le Forwarder Splunk...
+      win_shell: |
+        NET STOP SplunkForwarder
+
+    - name: Supprime le Forwarder Splunk...
+      win_shell: |
+        msiexec /x "C:\tmp\splunkforwarder-9.1.2-b6b9c8185839-x64-release.msi"
