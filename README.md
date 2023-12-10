@@ -10,7 +10,7 @@ https://github.com/AkselCaubel/SAE5.Cyber-Devcloud
 Au cours de ces semaines où nous avons travaillé sur le déploiement de solutions de défense dans un environnement vulnérable (GOAD), nous avons pu réaliser plusieurs tâches qui sont toutes réparties ci-dessous. Cela va de l'automatisation au déploiement de SIEMs connus comme Wazuh,Splunk et la suite Elastic jusqu'à l'attaque et donc la confirmation de fonctionnement de notre infrastructure. On peut résumer notre travail en quelques points importants :
 
 ### L'organisation :
-- Utilisation de l'onglet 'Projects' de Github pour avoir un suivi des tâches. [Ici](https://github.com/AkselCaubel/SAE5.Cyber-Devcloud/projects?query=is%3Aopen) /!\**Pour voir cette partie vous devez accepter l'invitation reçue** /!\
+- Utilisation de l'onglet 'Projects' de Github pour avoir un suivi des tâches. [Ici](https://github.com/AkselCaubel/SAE5.Cyber-Devcloud/projects?query=is%3Aopen) /!\ **Pour voir cette partie vous devez accepter l'invitation reçue** /!\
 - Utilisation de la plateforme Slack pour la communication. 
 
 ### Le déploiement :
