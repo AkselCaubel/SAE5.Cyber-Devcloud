@@ -37,7 +37,6 @@ token_enrollement = AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3MDEwOTI1NzE4MTc6
 ip = 10.202.0.174
 login = elastic
 passw = kWN9-srZt1fiYERiOJVk
-token_enrollement = 
 ```
 
 > Wazuh-Server  
