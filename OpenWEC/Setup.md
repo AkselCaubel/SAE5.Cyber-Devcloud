@@ -3,9 +3,10 @@
 On installe les paquets nécessaires :
 
 ~~~bash
-apt install libclang-dev libkrb5-dev libgssapi-krb5-2 sqlite3 msktutil cargo git sudo curl
+apt install libclang-dev libkrb5-dev libgssapi-krb5-2 sqlite3 msktutil  git sudo curl pkgconf clang make libssl-dev
 curl https://sh.rustup.rs -sSf | sh
 source "$HOME/.cargo/env"
+cargo install cargo-deb
 # Puis le git du projet
 git clone https://github.com/cea-sec/openwec.git
 ~~~
@@ -107,7 +108,7 @@ Penser à le mettre dans le groupe administrateur dans la catégorie "Member Of"
 
 On relie maintenant le SPN avec notre utilisateur openWEC :
 ~~~
-setspn -S HTTP/pc-openwec.sevenkingdoms.local openwec
+setspn -S HTTP/pc-openwec.sevenkingdoms.local pc-openwec
 ~~~
 
 Il nous faut ajouter une GPO et y renseigner le serveur, pour cela :
@@ -148,7 +149,7 @@ scp openwec.keytab deb-user@10.202.0.121:/etc/openwec.keytab
 
 Après cela on retourne sur le pc-openwec : 
 ~~~
-    /usr/local/bin/openwecd -c /etc/openwec.conf.toml &
+/usr/local/bin/openwecd -c /etc/openwec.conf.toml &
 ~~~
 Quand on regarde le port d'openwec on voit bien :
 ~~~
@@ -160,3 +161,39 @@ openwecd 9174 root   10u  IPv4  32344      0t0  TCP *:5985 (LISTEN)
 Et lorsque l'on regarde le fichier de log :
 
 ![Alt text](img/logs.png)
+
+## <b> <u> Résolution des différents problèmes </b> </u>
+
+### <b> 1 - Erreur d'initialisation Kerberos </b> 
+
+Un des soucis avec Kerberos peut-être dû au fait de l'horodatage des machines. C'est pour cela qu'il est utilie de configurer NTP. Sur windows il nous suffit de cliquer sur "Choisir la date et l'heure automatiquement" et de choisir le fuseau horaire "Paris". Sur linux c'est plus dur :
+
+On installe le paquet ntp :
+~~~
+sudo apt update && sudo apt install ntpd 
+~~~
+On change ensuite dans le fichier de conf pool.ntp.org par : 
+~~~bash
+# Ouverture du fichier 
+sudo nano /etc/ntp.conf
+# Ligne modifiée
+pool fr.pool.ntp.org iburst
+~~~
+Il nous suffit maintenant de redémarrer le service :
+~~~
+sudo systemctl restart ntp
+~~~
+Et lorsque l'on tape la commande "timedatect", on voit bien :
+
+![Alt text](img/Screenshot_20231210_204650.png)
+
+Cela peut régler le problème de synchronistation des clefs et OpenWec pourra bien se lancer.
+
+### <b> 2 - Erreur d'écriture des logs Windows </b>
+
+Un autre problème qui m'est arrivé est l'écriture des logs Windows, dans la configuration de subscription de l'ANSSI il est indiqué que les logs seront écris dans le fichier "/openwec/logssho". Pour que cela puisse marcher il fallait faire attention à ce que l'utilisateur lanceur du service ait bien les droits sur le fichier :
+~~~
+chown -R openwec:openwec /openwec/logssho
+~~~
+
+Et ensuite, j'ai pu découvrir que le service n'écrivait pas si les logs étaient minimes (les logs de check pour vérifier si la connexion était toujours établie ou non). C'est pour cela qu'il faut simuler une attaque afin de savoir si l'écriture de nos fichiers marche bel et bien.
