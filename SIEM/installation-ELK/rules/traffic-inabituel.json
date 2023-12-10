@@ -1,0 +1,32 @@
+PUT _watcher/watch/network_traffic_analysis
+{
+  "trigger": {
+    "schedule": { "interval": "15m" }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "indices": "your_network_traffic_index",
+        "body": {
+          "query": {
+            "range": {
+              "bytes_transferred_field": { "gt": 1000000 }
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "compare": {
+      "ctx.payload.hits.total": { "gt": 0 }
+    }
+  },
+  "actions": {
+    "notify_admin": {
+      "logging": {
+        "text": "Unusual network traffic detected in Elasticsearch. Investigate immediately!"
+      }
+    }
+  }
+}

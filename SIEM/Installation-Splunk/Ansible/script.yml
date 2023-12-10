@@ -1,0 +1,21 @@
+---
+- name: Déploiement de l'agent Splunk.
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Créer le répertoire C:\tmp
+      win_file:
+        path: C:\tmp
+        state: directory
+
+    - name: Télécharge l'agent Splunk.
+      win_shell: |
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri https://download.splunk.com/products/universalforwarder/releases/9.1.2/windows/splunkforwarder-9.1.2-b6b9c8185839-x64-release.msi -OutFile "C:\tmp\splunkforwarder-9.1.2-b6b9c8185839-x64-release.msi" -UseBasicParsing
+
+    # On change les IPs ICI !
+    - name: Installe l'agent Splunk et le démarre.
+      win_shell: |
+        $Serv_splunk = "10.202.0.153:9000"
+        msiexec.exe /i "C:\tmp\splunkforwarder-9.1.2-b6b9c8185839-x64-release.msi" RECEIVING_INDEXER="$Serv_splunk" WINEVENTLOG_APP_ENABLE=1 WINEVENTLOG_SEC_ENABLE=1 WINEVENTLOG_SYS_ENABLE=1 WINEVENTLOG_FWD_ENABLE=1 WINEVENTLOG_SET_ENABLE=1 ENABLEADMON=1 PERFMON=cpu,memory,network,diskspace SPLUNKUSERNAME=admin SPLUNKPASSWORD=cvbn123456 USE_LOCAL_SYSTEM=1 PRIVILEGESECURITY=1 AGREETOLICENSE=Yes /quiet
+
