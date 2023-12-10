@@ -34,5 +34,11 @@ Au cours de ces semaines où nous avons travaillé sur le déploiement de soluti
 ### Ce qu'on aurait voulu approfondir :
 Nous n'avons malheureusement pas eu le temps d'approfondir plus la partie RedTeam sur le test de pénétration ainsi que sur le côté sécurité avec l'implémentation des règles Sigma.
 
+### Schéma réseau de l'infrastructure virtualisée avec VirtualBox :
 ![Alt text](Synth%C3%A8se/img/schema-reseau-vbox.png)
+
+### Schéma réseau de l'infrastructure virtualisée avec Proxmox :
 ![Alt text](Synth%C3%A8se/img/schema-reseau.png)
+
+### Membres du groupe :
+Tim, Aksel, Léo
