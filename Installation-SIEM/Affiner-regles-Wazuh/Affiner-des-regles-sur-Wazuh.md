@@ -124,10 +124,39 @@
         <if_matched_group>authentication_failed</if_matched_group>
         <same_field>win.eventdata.ipAddress</same_field>
         <options>no_full_log</options>
-        <description>Plusieurs tentatives de connexions infructueuses en moins de 10 secondes. Bruteforce très probable ! Attaquant : $(win.eventdata.ipAddress)</description>
+        <description>Plusieurs tentatives de connexions infructueuses en moins de 10 secondes. Bruteforce très propable ! Attaquant : $(win.eventdata.ipAddress)</description>
         <mitre>
         <id>T1110</id>
         </mitre>
         <group>authentication_failures,gdpr_IV_32.2,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_AC.7,nist_800_53_AU.14,nist_800_53_SI.4,pci_dss_10.2.4,pci_dss_10.2.5,pci_dss_11.4,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
     </rule>
 
+### Ce qui donne sur le Dashboard :
+![Alt text](image-14.png)
+
+## Activation de l'Active Response avec Wazuh :
+### Malgré tout, dans son fonctionnement inital, Wazuh agit uniquement comme un IDS (Intrusion Detection System) et ne bloque donc pas activement les menaces. Il faut alors rajouter de nouvelles règles pour les bloquer.
+
+### On commence par regarder si l'entrée firewall-drop (blocage IP de l'attaquant avec la création de règles IPTables) dans le fichier suivant :
+    /var/ossec/etc/ossec.conf
+
+![Alt text](image-15.png)
+
+### Maintenant, toujours dans le même fichier, on va passer à la rédaction de règles. Ici, le concept est simple : 
+    <ossec_config>
+        <active-response>
+            <command>firewall-drop</command>
+            <location>local</location>
+            <rules_id>5551</rules_id>
+            <timeout>180</timeout>
+        </active-response>
+    </ossec_config>
+
+### On commence par définir la commande que le serveur va lancer (ici, firewall-drop qui ban IP l'attaquant), puis la règle qui va faire lancer la réaction (5551 = plusieurs tentatives de connexions infructueuses) puis le timeout (durée du banissement de l'attaquant, en secondes). 
+    sudo systemctl restart wazuh-manager
+*On oublie évidemment pas de relancer le serveur à chaque modifications...*
+
+### On peut tester la réaction du serveur en lançant une attaque bruteforce sur le SSH de la machine avec hydra pour voir si la réponse fonctionne en réalisant des pings en continu :
+![Alt text](image-16.png)
+
+### Notre règle fonctionne bien ! Le ping ne passe plus lorsqu'on lance l'attaque avec hydra.
