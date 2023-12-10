@@ -2,7 +2,7 @@
 
 ## Installation de la stack
 
-L'installation d'ELK à était faite a partie du [répositori GitHub de M.Pouchoulon](https://github.com/pushou/siem.git)
+L'installation d'ELK à été faite a partie du [répositori GitHub de M.Pouchoulon](https://github.com/pushou/siem.git)
 
 la première partie va consister a cloner le répo :
 
