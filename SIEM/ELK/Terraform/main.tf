@@ -41,7 +41,6 @@ resource "proxmox_vm_qemu" "elk_vm" {
     network {
       bridge    = "vmbr0"
       model     = "virtio"
-      # tag       = 10
 
     }
     provisioner "local-exec" {
