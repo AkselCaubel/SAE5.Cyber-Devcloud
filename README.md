@@ -1,4 +1,6 @@
 ## Synthèse
+### Membres du groupe :
+Tim, Aksel, Léo
 
 ### Bilan des rendus :
 Au cours de ces semaines où nous avons travaillé sur le déploiement de solutions de défense dans un environnement vulnérable (GOAD), nous avons pu réaliser plusieurs tâches qui sont toutes réparties ci-dessous. Cela va de l'automatisation au déploiement de SIEMs connus comme Wazuh,Splunk et la suite Elastic jusqu'à l'attaque et donc la confirmation de fonctionnement de notre infrastructure. On peut résumer notre travail en quelques points importants :
@@ -29,7 +31,7 @@ Au cours de ces semaines où nous avons travaillé sur le déploiement de soluti
 
 ### Un audit de l'infrastructure GOAD :
 - Réalisation d'une 'cheatsheet' pour permettre le pentest d'un environnement GOAD. [Ici](https://github.com/AkselCaubel/SAE5.Cyber-Devcloud/blob/main/Cheatsheet/Cheatsheet-Pentest-AD.md)
-- Audit de l'infrastructure GOAD en mode RedTeam. [[Ici](https://github.com/AkselCaubel/SAE5.Cyber-Devcloud/blob/main/Pentest%26Reaction-GOAD/Pentest-Goad.md)
+- Audit de l'infrastructure GOAD en mode RedTeam. [Ici](https://github.com/AkselCaubel/SAE5.Cyber-Devcloud/blob/main/Pentest%26Reaction-GOAD/Pentest-Goad.md)
 
 ### Ce qu'on aurait voulu approfondir :
 Nous n'avons malheureusement pas eu le temps d'approfondir plus la partie RedTeam sur le test de pénétration ainsi que sur le côté sécurité avec l'implémentation des règles Sigma.
@@ -39,6 +41,3 @@ Nous n'avons malheureusement pas eu le temps d'approfondir plus la partie RedTea
 
 ### Schéma réseau de l'infrastructure virtualisée avec Proxmox :
 ![Alt text](Synth%C3%A8se/img/schema-reseau.png)
-
-### Membres du groupe :
-Tim, Aksel, Léo
