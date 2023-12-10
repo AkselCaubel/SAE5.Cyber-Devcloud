@@ -3,11 +3,16 @@
 ### Bilan des rendus :
 Au cours de ces semaines où nous avons travaillé sur le déploiement de solutions de défense dans un environnement vulnérable (GOAD), nous avons pu réaliser plusieurs tâches qui sont toutes réparties ci-dessous. Cela va de l'automatisation au déploiement de SIEMs connus comme Wazuh,Splunk et la suite Elastic jusqu'à l'attaque et donc la confirmation de fonctionnement de notre infrastructure. On peut résumer notre travail en quelques points importants :
 
+### L'organisation :
+- Utilisation de l'onglet 'Projects' de Github pour avoir un suivi des tâches.
+- Utilisation de la plateforme Slack pour la communication.
+
 ### Le déploiement :
 - Installation de l'environnement GOAD avec VirtualBox.
 - Installation de l'environnement GOAD avec Proxmox.
 - Installation de SIEMs : Splunk, Wazuh, ELK.
 - Mise en place d'un serveur de logs : OpenWEC.
+- Mise en place d'un accès distant VPN avec OpenVPN.
 
 ### L'automatisation :
 - Scripts (Bash et Ansible) permettant l'installation de Wazuh sur une machine Debian 12 vierge ainsi que le déploiement des agents nécessaires (avec l'ajout de Sysmon) et qui configure également le serveur directement. 
@@ -17,6 +22,7 @@ Au cours de ces semaines où nous avons travaillé sur le déploiement de soluti
 ### La sécurisation :
 - Réalisation d'un tutoriel complet pour créer des règles Wazuh ainsi que l'utilisation de l'active response (IPS).
 - Mise en place de l'IDS Suricata sur la stack ELK.
+- Lecture de logs avec Chainsaw et Hayabusa.
 
 ### Un PoC de fonctionnement :
 - Détection d'une attaque de type Kerberoasting
