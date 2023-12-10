@@ -63,7 +63,6 @@
     file:
       path: /home/test/git/siem
       state: directory
-    # ansible.builtin.shell: mkdir -p /home/test/git/siem
 
   - name: Install jq
     ansible.builtin.apt:

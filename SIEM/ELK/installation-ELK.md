@@ -370,3 +370,70 @@ sh ../Script/elk-integration.sh
 
 ansible-playbook -i goad-inventory elk-agent.yml
 ```
+
+
+> ## Mise en place de sysmon sur Linux :
+
+Avant tous il faut installer [Sysmon](https://github.com/Sysinternals/SysmonForLinux/blob/main/INSTALL.md)
+
+Une fois l'installation faite il nous faut un fichier XML de configuration : [fichier_exemple](https://gist.github.com/olafhartong/56bfbbe1a43ba675fdf5b9f194d608af)
+
+La commande permettant de lancer la configuration (Sous root) :
+
+```bash
+sysmon -i fichier.xml
+```
+
+Le ```-i``` permet de sauvegarder la configuration lors de la première utilisation. On peut également si cette option a déjà été utilisé le faire avec ```-c``` pour update la configuration
+
+Dans la configuration faite sur Kibana, on a pu dire que les logs sont dans le fichier ```/var/log/syslog```. Pour que cela soit fait et que notre *Elastic-Agent* puisse récuperer la donnée, on utilisera alors cette commande (sous n'importe quelle user avec le groupe sudoer) :
+
+```bash
+sudo tail -f /var/log/syslog | sudo /opt/sysmon/sysmonLogView
+```
+
+> ## Visualisation des données Sysmon Linux
+
+![données_Sysmon](<img/sysmon linux.png>)
+
+> ## Version automatisé avec Ansible
+
+```yaml
+---
+
+- name: Install sysmon
+  hosts: all
+  gather_facts: true
+  become: true
+  become_user: root
+  tasks:
+
+    - name: Register Microsoft key 
+      ansible.builtin.shell: |  
+        wget -q https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+
+    - name: Install sysmon
+      ansible.builtin.apt:
+        name: sysmonforlinux
+        force: yes
+        state: present
+
+    - name : Create sysmon dir
+      file:
+        path: /home/test/sysmon
+        state: directory
+
+    - name: Get sysmon XML
+      ansible.builtin.copy:
+        src: ./files/sysmon-xml.xml
+        dest: /home/test/sysmon/sysmon-xml.xml
+        owner: test
+        group: test
+        mode: '0555'
+
+    - name: Charge sysmon file 
+      ansible.builtin.shell: |
+        sysmon -i /home/test/sysmon/sysmon-xml.xml
+        sudo tail -f /var/log/syslog | sudo /opt/sysmon/sysmonLogView
+```
